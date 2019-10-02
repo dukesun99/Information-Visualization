@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- This code is taken and modified from http://xgfe.github.io/2015/11/24/chenwubai/d3-basicCharts-radar/ -->
+<!-- See the original version: http://xgfe.github.io/uploads/chenwubai/d3-basicCharts-radar/radar.html -->
+<head>
+    <meta charset="UTF-8">
+    <title>Antibiotics Effectiveness</title>
+    <style>
+        .container {
+            margin: 30px auto;
+            width: 1200px;
+            height: 800px;
+            border: 1px solid #000;
+        }
+
+        .webs polygon,
+        .websr polygon,
+
+        .lines line {
+            fill: white;
+            fill-opacity: 0.5;
+            stroke: gray;
+            stroke-dasharray: 10 5;
+        }
+
+        .webs polygon:nth-child(odd) {
+            fill: mediumpurple;
+        }
+
+        .websr polygon:nth-child(odd) {
+            fill: lightcoral;
+        }
+
+        .areas polygon {
+            fill-opacity: 0;
+            stroke-width: 3;
+        }
+
+        .areas circle {
+            fill: white;
+            stroke-width: 3;
+        }
+
+        .texts text {
+            font-size: 10;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <svg width="100%" height="100%"></svg>
+    </div>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script>
+        window.onload = function () {
+            var width = 1200, height = 800;
+            var main = d3.select('.container svg').append('g')
+                .classed('main', true)
+                .attr('transform', "translate(" + width / 2 + ',' + height / 2 + ')');
+
+
+            var datal = {
+                fieldNames: ["Brucella anthracis", "Streptococcus hemolyticus", "Streptococcus viridans", "Diplococcus pneumoniae", "Staphylococcus albus", "Staphylococcus aureus", "Streptococcus fecalis"],
+                values: [
+                    [0.001, 0.001, 0.005, 0.005, 0.007, 0.03, 1],
+                    [0.01, 14, 10, 11, 0.1, 0.03, 1],
+                    [0.007, 10, 40, 10, 0.001, 0.001, 0.1]
+                ]
+            }
+
+            var datar = {
+                fieldNames: ["Salmonella (Eberthella) typhosa", "Brucella abortus", "Proteus vulgaris", "Salmonella schottmuelleri", "Escherichia coli", "Mycobacterium tuberculosis", "Klebsiella pneumoniae", "Pseudomonas aeruginosa", "Aerobacter aerogenes"],
+                values: [
+                    [1, 1, 3, 10, 100, 800, 850, 850, 870],
+                    [0.4, 2, 0.1, 0.8, 0.4, 5, 1.2, 2, 1],
+                    [0.008, 0.02, 0.1, 0.09, 0.1, 2, 1, 0.4, 1.6]
+                ]
+            }
+            var radius = 200,
+                total = 8,
+                total_l = 6,
+                total_r = 8,
+                level = 6,
+                rangeMin = 0,
+                rangeMax = 1000,
+                arc = 2 * Math.PI;
+            var onePiece = arc / total;
+            var leftPiece = arc / (total_l) / 2;
+            var rightPiece = arc / (total_r) / 2;
+            var polygons = {
+                webs: [],
+                webPoints: []
+            };
+
+            var polygonsr = {
+                webs: [],
+                webPoints: []
+            };
+            for (var k = level; k > 0; k--) {
+                var webs = '',
+                    webPoints = [];
+                var websr = '',
+                    webPointsr = [];
+                var r = radius / level * k;
+                for (var i = 0; i < total_l; i++) {
+                    var x = r * Math.sin(i * leftPiece + Math.PI),
+                        y = r * Math.cos(i * leftPiece + Math.PI);
+                    webs += x + ',' + y + ' ';
+                    webPoints.push({
+                        x: x,
+                        y: y
+                    });
+                }
+                var x = r * Math.sin(0),
+                    y = r * Math.cos(0);
+                webs += x + ',' + y + ' ';
+                webPoints.push({
+                    x: x,
+                    y: y
+                });
+                for (var i = 0; i < total_r; i++) {
+                    var x = r * Math.sin(i * rightPiece),
+                        y = r * Math.cos(i * rightPiece);
+                    websr += x + ',' + y + ' ';
+                    webPointsr.push({
+                        x: x,
+                        y: y
+                    });
+                }
+                var xr = r * Math.sin(Math.PI),
+                    yr = r * Math.cos(Math.PI);
+                websr += xr + ',' + yr + ' ';
+                webPointsr.push({
+                    x: xr,
+                    y: yr
+                });
+                polygonsr.webs.push(websr);
+                polygonsr.webPoints.push(webPointsr);
+
+                polygons.webs.push(webs);
+                polygons.webPoints.push(webPoints);
+            }
+            var webs = main.append('g')
+                .classed('webs', true)
+                .attr('transform', "translate(-25, 0)");
+
+            var websr = main.append('g')
+                .classed('websr', true)
+                .attr('transform', "translate(25, 0)");
+            webs.selectAll('polygon')
+                .data(polygons.webs)
+                .enter()
+                .append('polygon')
+                .attr('points', function (d) {
+                    return d;
+                });
+
+            websr.selectAll('polygon')
+                .data(polygonsr.webs)
+                .enter()
+                .append('polygon')
+                .attr('points', function (d) {
+                    return d;
+                });
+            var lines = main.append('g')
+                .classed('lines', true);
+            var linesr = main.append('g')
+                .classed('lines', true);
+            lines.selectAll('line')
+                .data(polygons.webPoints[0])
+                .enter()
+                .append('line')
+                .attr('x1', 0)
+                .attr('y1', 0)
+                .attr('x2', function (d) {
+                    return d.x;
+                })
+                .attr('y2', function (d) {
+                    return d.y;
+                })
+                .attr('transform', "translate(-25, 0)");
+            linesr.selectAll('line')
+                .data(polygonsr.webPoints[0])
+                .enter()
+                .append('line')
+                .attr('x1', 0)
+                .attr('y1', 0)
+                .attr('x2', function (d) {
+                    return d.x;
+                })
+                .attr('y2', function (d) {
+                    return d.y;
+                })
+                .attr('transform', "translate(25, 0)");
+            var areasData = [];
+            var areasDatar = [];
+            var valuesl = datal.values;
+            var valuesr = datar.values;
+            for (var i = 0; i < 3; i++) {
+                var
+                    valuel = valuesl[i],
+                    area = '',
+                    points = [];
+                for (var k = 0; k <= total_l; k++) {
+                    console.log(valuel[k]);
+                    var r = radius * (3 - Math.log10(valuel[k] - rangeMin)) / (Math.log10(rangeMax - rangeMin) + 3);
+                    var x = r * Math.sin(k * leftPiece + Math.PI),
+                        y = r * Math.cos(k * leftPiece + Math.PI);
+                    area += x + ',' + y + ' ';
+                    points.push({
+                        x: x,
+                        y: y
+                    })
+                }
+                areasData.push({
+                    polygon: area,
+                    points: points
+                });
+            }
+            for (var i = 0; i < 3; i++) {
+                var
+                    valuer = valuesr[i],
+                    area = '',
+                    points = [];
+                for (var k = 0; k <= total_r; k++) {
+                    console.log(valuer[k]);
+                    var r = radius * (3 - Math.log10(valuer[k] - rangeMin)) / (Math.log10(rangeMax - rangeMin) + 3);
+                    var x = r * Math.sin(k * rightPiece),
+                        y = r * Math.cos(k * rightPiece);
+                    area += x + ',' + y + ' ';
+                    points.push({
+                        x: x,
+                        y: y
+                    })
+                }
+                areasDatar.push({
+                    polygon: area,
+                    points: points
+                });
+            }
+            var areas = main.append('g')
+                .classed('areas', true)
+                .attr('transform', "translate(-25, 0)");
+            areas.selectAll('g')
+                .data(areasData)
+                .enter()
+                .append('g')
+                .attr('class', function (d, i) {
+                    return 'area' + (i + 1);
+                });
+
+            var areasr = main.append('g')
+                .classed('areas', true)
+                .attr('transform', "translate(25, 0)");
+            areasr.selectAll('g')
+                .data(areasDatar)
+                .enter()
+                .append('g')
+                .attr('class', function (d, i) {
+                    return 'area' + (i + 1);
+                });
+            for (var i = 0; i < areasData.length; i++) {
+                var area = areas.select('.area' + (i + 1)),
+                    areaData = areasData[i];
+                area.append('polygon')
+                    .attr('points', areaData.polygon)
+                    .attr('stroke', function (d, index) {
+                        return getColor(i);
+                    })
+                    .attr('fill', function (d, index) {
+                        return getColor(i);
+                    });
+                var circles = area.append('g')
+                    .classed('circles', true);
+                circles.selectAll('circle')
+                    .data(areaData.points)
+                    .enter()
+                    .append('circle')
+                    .attr('cx', function (d) {
+                        return d.x;
+                    })
+                    .attr('cy', function (d) {
+                        return d.y;
+                    })
+                    .attr('r', 3)
+                    .attr('stroke', function (d, index) {
+                        return getColor(i);
+                    });
+            }
+
+            for (var i = 0; i < areasDatar.length; i++) {
+                var area = areasr.select('.area' + (i + 1)),
+                    areaData = areasDatar[i];
+                area.append('polygon')
+                    .attr('points', areaData.polygon)
+                    .attr('stroke', function (d, index) {
+                        return getColor(i);
+                    })
+                    .attr('fill', function (d, index) {
+                        return getColor(i);
+                    });
+                var circles = area.append('g')
+                    .classed('circles', true);
+                circles.selectAll('circle')
+                    .data(areaData.points)
+                    .enter()
+                    .append('circle')
+                    .attr('cx', function (d) {
+                        return d.x;
+                    })
+                    .attr('cy', function (d) {
+                        return d.y;
+                    })
+                    .attr('r', 3)
+                    .attr('stroke', function (d, index) {
+                        return getColor(i);
+                    });
+            }
+
+            var labelPoints = [];
+            var labelTexts = ["1000", "100", "10", "1", "0.1", "0.01", "0.001", "100", "10", "1", "0.1", "0.01", "0.001"];
+            for (var i = 0; i < 7; i++) {
+                var x = 0,
+                    y = (radius / level) * i;
+                labelPoints.push({
+                    x: x,
+                    y: y
+                });
+            }
+            for (var i = 1; i < 7; i++) {
+                var x = 0,
+                    y = -(radius / level) * i;
+                labelPoints.push({
+                    x: x,
+                    y: y
+                });
+            }
+
+            var legend = title = main.append('g')
+                .classed('texts', true);
+
+            title.append("rect")
+                .attr("x", -radius - 20)
+                .attr("y", radius + 65)
+                .attr("width", 20)
+                .attr("height", 5)
+                .style("fill", getColor(0));
+            title.append('text')
+                .attr("x", -radius)
+                .attr("y", radius + 75)
+                .text("Penicilin")
+                .attr("font-size", 20)
+                .attr("text-anchor", "start");
+
+
+            title.append("rect")
+                .attr("x", -75)
+                .attr("y", radius + 65)
+                .attr("width", 20)
+                .attr("height", 5)
+                .style("fill", getColor(1));
+            title.append('text')
+                .attr("x", -55)
+                .attr("y", radius + 75)
+                .text("Streptomycin")
+                .attr("font-size", 20)
+                .attr("text-anchor", "start");
+
+            title.append("rect")
+                .attr("x", radius - 100)
+                .attr("y", radius + 65)
+                .attr("width", 20)
+                .attr("height", 5)
+                .style("fill", getColor(2));
+
+            title.append('text')
+                .attr("x", radius - 80)
+                .attr("y", radius + 75)
+                .text("Neomycin")
+                .attr("font-size", 20)
+                .attr("text-anchor", "start");
+
+            var title = main.append('g')
+                .classed('texts', true);
+            title.append('text')
+                .attr("x", 0)
+                .attr("y", -radius - 20)
+                .text("MIC")
+                .attr("font-size", 20)
+                .attr("text-anchor", "middle")
+                .attr("font-weight", "bold");
+            title.append('text')
+                .attr("x", 0)
+                .attr("y", -radius - 130)
+                .text("Antibiotics Effectiveness")
+                .attr("font-size", 50)
+                .attr("text-anchor", "middle");
+            title.append('text')
+                .attr("x", -radius / 1.2)
+                .attr("y", -radius - 70)
+                .text("Positive Gram Staining")
+                .attr("font-size", 20)
+                .attr("text-anchor", "middle")
+                .attr("font-weight", "bold");
+            title.append('text')
+                .attr("x", radius / 1.2)
+                .attr("y", -radius - 70)
+                .text("Negative Gram Staining")
+                .attr("font-size", 20)
+                .attr("text-anchor", "middle")
+                .attr("font-weight", "bold");
+
+            var textsLabel = main.append('g')
+                .classed('texts', true)
+                .attr("text-anchor", "middle")
+                .attr('transform', "translate(0, 5)");
+            textsLabel.selectAll('text')
+                .data(labelPoints)
+                .enter()
+                .append('text')
+                .attr('x', function (d) {
+                    return d.x;
+                })
+                .attr('y', function (d) {
+                    return d.y;
+                })
+                .text(function (d, i) {
+                    return labelTexts[i];
+                });
+
+
+            var textPoints = [];
+            var textRadius = radius + 25;
+            for (var i = 0; i < (total_l + 1); i++) {
+                var x = textRadius * Math.sin(i * leftPiece + Math.PI),
+                    y = textRadius * Math.cos(i * leftPiece + Math.PI);
+                textPoints.push({
+                    x: x,
+                    y: y
+                });
+            }
+
+            var textPointsr = [];
+            var textRadius = radius + 25;
+            for (var i = 0; i < (total_r + 1); i++) {
+                var x = textRadius * Math.sin(i * rightPiece),
+                    y = textRadius * Math.cos(i * rightPiece);
+                textPointsr.push({
+                    x: x,
+                    y: y
+                });
+            }
+            var texts = main.append('g')
+                .classed('texts', true)
+                .attr('transform', "translate(-25, 0)")
+                .attr("text-anchor", "end");
+            texts.selectAll('text')
+                .data(textPoints)
+                .enter()
+                .append('text')
+                .attr('x', function (d) {
+                    return d.x;
+                })
+                .attr('y', function (d) {
+                    return d.y;
+                })
+                .text(function (d, i) {
+                    return datal.fieldNames[i];
+                });
+
+            var textsr = main.append('g')
+                .classed('texts', true)
+                .attr('transform', "translate(25, 0)")
+                .attr("text-anchor", "start");
+            textsr.selectAll('text')
+                .data(textPointsr)
+                .enter()
+                .append('text')
+                .attr('x', function (d) {
+                    return d.x;
+                })
+                .attr('y', function (d) {
+                    return d.y;
+                })
+                .text(function (d, i) {
+                    return datar.fieldNames[i];
+                });
+        };
+        function getColor(idx) {
+            var palette = ["#ff0000", "#00ff00", "#0000ff"];
+            return palette[idx];
+        }
+    </script>
+</body>
+
+</html>
