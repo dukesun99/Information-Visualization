@@ -18,9 +18,10 @@
 
         .lines line {
             fill: white;
-            fill-opacity: 0.5;
+            fill-opacity: 0.1;
             stroke: gray;
             stroke-dasharray: 10 5;
+            stroke-opacity: 0.3;
         }
 
         .webs polygon:nth-child(odd) {
@@ -81,7 +82,7 @@
                 total = 8,
                 total_l = 6,
                 total_r = 8,
-                level = 6,
+                level = 3,
                 rangeMin = 0,
                 rangeMax = 1000,
                 arc = 2 * Math.PI;
@@ -322,7 +323,7 @@
             var labelTexts = ["1000", "100", "10", "1", "0.1", "0.01", "0.001", "100", "10", "1", "0.1", "0.01", "0.001"];
             for (var i = 0; i < 7; i++) {
                 var x = 0,
-                    y = (radius / level) * i;
+                    y = (radius / 6) * i;
                 labelPoints.push({
                     x: x,
                     y: y
@@ -330,7 +331,7 @@
             }
             for (var i = 1; i < 7; i++) {
                 var x = 0,
-                    y = -(radius / level) * i;
+                    y = -(radius / 6) * i;
                 labelPoints.push({
                     x: x,
                     y: y
@@ -352,6 +353,15 @@
                 .text("Penicilin")
                 .attr("font-size", 20)
                 .attr("text-anchor", "start");
+
+            /*
+            title.append('text')
+                .attr("x", 0)
+                .attr("y", radius + 115)
+                .text("The MIC indicates the effectiveness of antibiotic for a specific bacteria, smaller MIC means the antibiotic is more effective against this bacteria.")
+                .attr("font-size", 15)
+                .attr("text-anchor", "middle");
+                */
 
 
             title.append("rect")
@@ -410,6 +420,7 @@
                 .attr("font-size", 20)
                 .attr("text-anchor", "middle")
                 .attr("font-weight", "bold");
+                
 
             var textsLabel = main.append('g')
                 .classed('texts', true)
